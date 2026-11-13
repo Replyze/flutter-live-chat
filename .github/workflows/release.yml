@@ -45,10 +45,11 @@ jobs:
             *) echo "prerelease=false" >> "$GITHUB_OUTPUT" ;;
           esac
 
+      - run: flutter pub get
+
       - name: Release notes from CHANGELOG.md
         run: dart tool/changelog_notes.dart "${{ steps.version.outputs.version }}" --release > "$RUNNER_TEMP/notes.md"
 
-      - run: flutter pub get
       - run: dart format --set-exit-if-changed .
       - run: flutter analyze
       - run: flutter test

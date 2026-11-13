@@ -4,16 +4,22 @@ import 'package:flutter/widgets.dart';
 import 'protocol.dart';
 import 'session.dart';
 
-/// What [ReplyzeHost] gives the API so show() and hide() can reach it.
+/// What ReplyzeHost gives the API so [Replyze.show] and [Replyze.hide] can
+/// reach it.
 abstract class ReplyzeHostHandle {
+  /// Shows the full-screen chat; with a [context], the back button closes it.
   void show(BuildContext? context);
+
+  /// Hides the chat (it keeps running).
   void hide();
+
+  /// Whether the chat is on screen.
   bool get isVisible;
 }
 
 /// The Replyze API: configure once, then show the chat, say who the user
 /// is, and listen for replies and the unread count. The chat itself is
-/// drawn by [ReplyzeHost] (around your app) or by a ReplyzeChat placed in
+/// drawn by ReplyzeHost (around your app) or by a ReplyzeChat placed in
 /// one of your screens; both join this session.
 class Replyze {
   Replyze._();
@@ -37,12 +43,13 @@ class Replyze {
     _options.value = options;
   }
 
+  /// The options given to [configure], or null before it.
   static ReplyzeOptions? get options => _options.value;
 
   /// For the chat views: changes of [configure]'s options.
   static ValueListenable<ReplyzeOptions?> get optionsListenable => _options;
 
-  /// Opens the chat full-screen (needs [ReplyzeHost]). Pass a context from
+  /// Opens the chat full-screen (needs ReplyzeHost). Pass a context from
   /// under your Navigator so Android's back button closes the chat.
   static void show([BuildContext? context]) {
     final host = _host;
@@ -53,8 +60,11 @@ class Replyze {
     host.show(context);
   }
 
+  /// Closes the full-screen chat. It keeps running, so replies count as
+  /// unread.
   static void hide() => _host?.hide();
 
+  /// Whether the full-screen chat is on screen.
   static bool get isVisible => _host?.isVisible ?? false;
 
   /// Who the user is. With identity verification, pass userId and the userHash from your server.
@@ -94,7 +104,7 @@ class Replyze {
   /// After identify(): whether the identity was verified.
   static Stream<bool> get identified => session.identified;
 
-  /// Used by [ReplyzeHost]; the last one attached wins. Not for apps.
+  /// Used by ReplyzeHost; the last one attached wins. Not for apps.
   static VoidCallback attachHost(ReplyzeHostHandle host) {
     _hosts.add(host);
     return () => _hosts.remove(host);

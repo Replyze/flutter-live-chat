@@ -5,6 +5,8 @@
 
 import 'dart:convert';
 
+/// The version of the JSON bridge between the app and the widget's in-app
+/// mode. The widget reports its own in its `ready` event.
 const int replyzeProtocolVersion = 1;
 const String defaultApiUrl = 'https://client.replyze.chat';
 const String defaultCdnUrl = 'https://cdn.replyze.chat';
@@ -14,8 +16,12 @@ const String defaultCdnUrl = 'https://cdn.replyze.chat';
 const String defaultBaseUrl = 'https://cdn.replyze.chat/in-app';
 const String defaultPageTitle = 'In-app chat';
 
-/// Replyze.configure()'s options.
+/// The options of `Replyze.configure` and `ReplyzeChat.options`.
+///
+/// Only [widgetToken] is required. Set [baseUrl] when the widget has an
+/// allowed-domains list.
 class ReplyzeOptions {
+  /// Options for the widget with this token.
   const ReplyzeOptions({
     required this.widgetToken,
     this.baseUrl,
@@ -27,7 +33,8 @@ class ReplyzeOptions {
     this.pageTitle,
   });
 
-  /// The widget's embed token, "wgt_..." (Settings → Integrations → Install widget).
+  /// The widget's embed token, "wgt_..." (Settings → Integrations →
+  /// Install widget).
   final String widgetToken;
 
   /// The address the chat page runs at: the inbox shows it as the visitor's
@@ -42,7 +49,8 @@ class ReplyzeOptions {
   /// Where widget.js is served from (default https://cdn.replyze.chat).
   final String? cdnUrl;
 
-  /// The interface language ("de", "sr", "pt-BR"...).
+  /// The interface language ("de", "sr", "pt-BR"...); default: the
+  /// device's, or the widget's setting.
   final String? language;
 
   /// Visitor presence (the Visitors page). Default true.
@@ -51,9 +59,12 @@ class ReplyzeOptions {
   /// The chat's close buttons. False when the chat is one of your own screens.
   final bool showCloseButton;
 
-  /// The page title the team sees next to the conversation.
+  /// The page title the team sees next to the conversation. Default
+  /// "In-app chat".
   final String? pageTitle;
 
+  /// A copy with the given options changed, e.g.
+  /// `Replyze.options!.copyWith(showCloseButton: false)`.
   ReplyzeOptions copyWith({
     String? widgetToken,
     String? baseUrl,
@@ -100,24 +111,32 @@ class ResolvedOptions {
   final String pageTitle;
 }
 
-/// Who the user is. With identity verification on, [userHash] is the
+/// Who the user is, for `Replyze.identify`. Give at least an email, a name
+/// or a user id. With identity verification on, [userHash] is the
 /// HMAC-SHA256 your server computes.
 class ReplyzeUser {
+  /// A signed-in user.
   const ReplyzeUser({this.email, this.name, this.userId, this.userHash});
 
+  /// The user's email address.
   final String? email;
+
+  /// The user's name, as the team sees it in the inbox.
   final String? name;
 
-  /// Your own id for this user (a String or an int).
+  /// Your own id for this user (a String or an int); with [userHash], the
+  /// same contact on every device.
   final Object? userId;
 
-  /// HMAC-SHA256(userId, or email without one, the widget's identity
-  /// secret), hex. Compute it on your server; never ship the secret.
+  /// HMAC-SHA256 of [userId] (or, without one, of the email in lower case),
+  /// keyed with the widget's identity secret, hex. Compute it on your
+  /// server; never ship the secret in the app.
   final String? userHash;
 }
 
-/// A reply from the AI or the team.
+/// A reply from the AI or the team (see `Replyze.messages`).
 class ReplyzeMessage {
+  /// A message as the widget reports it.
   const ReplyzeMessage({
     required this.id,
     required this.text,
@@ -127,12 +146,19 @@ class ReplyzeMessage {
     this.type = 'text',
   });
 
+  /// The message's id in Replyze.
   final String id;
+
+  /// The message text.
   final String text;
 
-  /// "bot" or "agent".
+  /// "bot" (the AI) or "agent" (your team).
   final String sender;
+
+  /// The name of the team member or the AI assistant, when the widget has it.
   final String? senderName;
+
+  /// When it was sent, as an ISO 8601 string.
   final String? createdAt;
 
   /// "text", or e.g. "rating_request" for the rating card.
@@ -155,11 +181,16 @@ class ReplyzeMessage {
   String toString() => 'ReplyzeMessage($id, $sender: $text)';
 }
 
-/// load_timeout, help_unavailable, unknown_command, invalid_options
+/// Something went wrong in the chat (see `Replyze.errors`).
 class ReplyzeError {
+  /// An error with a [code] and a [message] for the log.
   const ReplyzeError(this.code, this.message);
 
+  /// `load_timeout` (the chat didn't load), `help_unavailable`,
+  /// `unknown_command` or `invalid_options`.
   final String code;
+
+  /// What happened, in English, for the log.
   final String message;
 
   @override
@@ -172,19 +203,31 @@ class ReplyzeError {
   String toString() => 'ReplyzeError($code: $message)';
 }
 
-/// Safe-area insets in logical pixels (CSS pixels in the page).
+/// Safe-area insets in logical pixels (CSS pixels in the page). A side
+/// left null uses the page's own `env(safe-area-inset-*)`.
 class ReplyzeInsets {
+  /// Insets for some or all sides.
   const ReplyzeInsets({this.top, this.right, this.bottom, this.left});
 
+  /// The top inset (status bar).
   final double? top;
+
+  /// The right inset.
   final double? right;
+
+  /// The bottom inset (home indicator, navigation bar).
   final double? bottom;
+
+  /// The left inset.
   final double? left;
 }
 
+/// A bad option for `Replyze.configure`, e.g. a missing widget token.
 class ReplyzeConfigError implements Exception {
+  /// An error with this explanation.
   ReplyzeConfigError(String message) : message = '[Replyze] $message';
 
+  /// What is wrong and how to fix it.
   final String message;
 
   @override

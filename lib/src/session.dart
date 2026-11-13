@@ -13,20 +13,27 @@ typedef ReplyzeInjector = void Function(String script);
 
 /// What one chat view hears from its WebView.
 class ReplyzeConnectionHandlers {
+  /// Handlers for one connection; each is optional.
   const ReplyzeConnectionHandlers({this.onReady, this.onClose, this.onOpenUrl, this.onError});
 
+  /// The widget in this WebView is ready (also after a reload).
   final void Function()? onReady;
 
   /// The visitor tapped close in the chat.
   final void Function()? onClose;
+
+  /// A link in the chat, for the app to open outside the WebView.
   final void Function(String url)? onOpenUrl;
+
+  /// An error from this WebView, e.g. `load_timeout`.
   final void Function(ReplyzeError error)? onError;
 }
 
 const int _maxQueue = 100;
 const Set<String> _sticky = {'identify', 'setLanguage', 'setData'};
 
-/// One WebView's end of the bridge.
+/// One WebView's end of the bridge, from [ReplyzeSession.connect]. Only
+/// needed for a WebView of your own; ReplyzeChat makes its own.
 class ReplyzeConnection {
   ReplyzeConnection._(this._session, this._inject, this._handlers, this._timeout) {
     _startTimer();
@@ -45,6 +52,7 @@ class ReplyzeConnection {
   final List<Map<String, Object?>> _queue = [];
   Timer? _timer;
 
+  /// Whether the widget in this WebView has said it is ready.
   bool get isReady => _ready;
 
   /// A message from the WebView (the JavaScript channel's message).
@@ -65,6 +73,7 @@ class ReplyzeConnection {
     if (_ready) _run({'cmd': visible ? 'open' : 'close'});
   }
 
+  /// The safe-area insets for the page; null uses the page's own.
   void setInsets(ReplyzeInsets? insets) {
     _insets = insets == null ? null : insetsCommand(insets);
     if (_ready && _insets != null) _run(_insets!);
@@ -142,8 +151,12 @@ class ReplyzeConnection {
   }
 }
 
-/// The bridge state shared by every chat view.
+/// The bridge state shared by every chat view: who the user is, their data,
+/// the language, the unread count, and the commands that wait for a WebView
+/// to be ready. `Replyze.session` is the app's one session.
 class ReplyzeSession {
+  /// A session; [readyTimeout] is how long a WebView may take to load, and
+  /// [log] gets the widget's warnings (default: printed in debug builds).
   ReplyzeSession({this.readyTimeout = const Duration(seconds: 20), void Function(String level, String message)? log})
       : _log = log ?? _defaultLog;
 
@@ -171,11 +184,14 @@ class ReplyzeSession {
     return connection;
   }
 
+  /// How many WebViews are attached (one per chat view on screen or kept
+  /// loaded).
   int get connectionCount => _connections.length;
 
+  /// Unread replies while the chat is closed.
   int get unreadCount => _unread;
 
-  /// Unread replies while the chat is closed.
+  /// Changes of [unreadCount].
   Stream<int> get unreadCountChanges => _unreadController.stream;
 
   /// Every reply from the AI or the team.
@@ -183,12 +199,17 @@ class ReplyzeSession {
 
   /// The visitor tapped close in a chat.
   Stream<void> get closeRequests => _closeController.stream;
+
+  /// A WebView's widget became ready (each load).
   Stream<void> get readyEvents => _readyController.stream;
+
+  /// Errors from every WebView: `load_timeout`, `help_unavailable`...
   Stream<ReplyzeError> get errors => _errorController.stream;
 
   /// After identify(): whether the identity was verified.
   Stream<bool> get identified => _identifiedController.stream;
 
+  /// Who the user is; kept and sent again whenever a WebView loads.
   void identify(ReplyzeUser user) {
     final command = identifyCommand(user);
     if (command == null) {
@@ -199,6 +220,7 @@ class ReplyzeSession {
     _broadcast(command);
   }
 
+  /// The user's custom data (text, numbers, booleans; null removes a key).
   void setData(Map<String, Object?> data) {
     final clean = <String, Object?>{};
     data.forEach((key, value) {
@@ -217,6 +239,8 @@ class ReplyzeSession {
     });
   }
 
+  /// An event on the user's timeline in the inbox (a name of 1 to 64
+  /// characters).
   void pushEvent(String name, [Map<String, Object?>? data]) {
     final eventName = name.trim();
     if (eventName.isEmpty || eventName.length > 64) {
@@ -229,6 +253,7 @@ class ReplyzeSession {
     });
   }
 
+  /// The chat's language, e.g. "de"; kept for WebViews that load later.
   void setLanguage(String language) {
     if (language.trim().isEmpty) return;
     _language = {
@@ -238,6 +263,7 @@ class ReplyzeSession {
     _broadcast(_language!);
   }
 
+  /// Opens a help article by its id.
   void openArticle(int id) {
     if (id <= 0) {
       _log('warn', '[Replyze] openArticle: the article id must be a positive whole number.');
@@ -249,6 +275,7 @@ class ReplyzeSession {
     });
   }
 
+  /// Sends a message as the user.
   void sendMessage(String text) {
     if (text.trim().isEmpty) return;
     _broadcast({

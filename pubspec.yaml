@@ -1,11 +1,13 @@
 name: replyze_flutter
-description: The Replyze live chat and AI assistant inside your Flutter app on iOS and Android, with identity verification, help articles and unread counts.
+description: Live chat and AI support in Flutter apps on iOS and Android. The Replyze chat with signed-in users, unread counts, help articles and events.
 version: 0.1.0
 homepage: https://github.com/Replyze/flutter-live-chat
 repository: https://github.com/Replyze/flutter-live-chat
 issue_tracker: https://github.com/Replyze/flutter-live-chat/issues
+documentation: https://github.com/Replyze/flutter-live-chat#readme
 topics:
   - chat
+  - chatbot
   - customer-support
   - live-chat
   - webview
@@ -23,6 +25,12 @@ dependencies:
   webview_flutter_android: ">=3.16.0 <5.0.0"
 
 dev_dependencies:
-  flutter_lints: ^4.0.0
+  flutter_lints: ">=4.0.0 <7.0.0"
   flutter_test:
     sdk: flutter
+  webview_flutter_platform_interface: ^2.10.0
+
+# The chat runs in webview_flutter, which this package supports on iOS and Android.
+platforms:
+  android:
+  ios:

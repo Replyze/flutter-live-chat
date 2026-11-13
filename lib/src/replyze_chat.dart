@@ -11,9 +11,19 @@ import 'replyze.dart';
 import 'session.dart';
 
 /// The Replyze chat in a view of its own: a screen of your app, a tab, or
-/// (inside [ReplyzeHost]) the full-screen chat Replyze.show() opens. Uses
-/// Replyze.configure()'s options unless [options] is given.
+/// (inside ReplyzeHost) the full-screen chat [Replyze.show] opens. Uses
+/// [Replyze.configure]'s options unless [options] is given.
+///
+/// ```dart
+/// Scaffold(
+///   appBar: AppBar(title: const Text('Support')),
+///   body: ReplyzeChat(
+///     options: Replyze.options!.copyWith(showCloseButton: false),
+///   ),
+/// )
+/// ```
 class ReplyzeChat extends StatefulWidget {
+  /// A chat view; every argument is optional.
   const ReplyzeChat({
     super.key,
     this.options,
@@ -40,24 +50,37 @@ class ReplyzeChat extends StatefulWidget {
   /// Without them the page uses its own env(safe-area-inset-*).
   final ReplyzeInsets? insets;
 
-  /// The visitor tapped close in the chat.
+  /// The visitor tapped close in the chat (e.g. pop the route).
   final VoidCallback? onClose;
+
+  /// The chat has loaded (again after a reload).
   final VoidCallback? onReady;
+
+  /// Every reply from the AI or the team.
   final ValueChanged<ReplyzeMessage>? onMessage;
+
+  /// The unread count changed.
   final ValueChanged<int>? onUnreadCountChange;
+
+  /// `load_timeout`, `help_unavailable`, `invalid_options`...
   final ValueChanged<ReplyzeError>? onError;
 
   /// A link in the chat; default: url_launcher, outside the app.
   final ValueChanged<String>? onOpenUrl;
 
   /// What to show when the chat can't load (no connection, wrong token).
+  /// Default: a short message and "Try again".
   final Widget Function(BuildContext context, VoidCallback retry, ReplyzeError error)? errorBuilder;
+
+  /// The colour behind the page while it loads. Default white.
   final Color backgroundColor;
 
   @override
   State<ReplyzeChat> createState() => ReplyzeChatState();
 }
 
+/// The state of a [ReplyzeChat]; with a `GlobalKey<ReplyzeChatState>` you
+/// can call [reload].
 class ReplyzeChatState extends State<ReplyzeChat> {
   WebViewController? _controller;
   ReplyzeConnection? _connection;

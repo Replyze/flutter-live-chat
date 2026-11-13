@@ -5,7 +5,7 @@ import 'protocol.dart';
 import 'replyze.dart';
 import 'replyze_chat.dart';
 
-/// The full-screen chat that Replyze.show() opens, drawn over your app.
+/// The full-screen chat that [Replyze.show] opens, drawn over your app.
 /// Put it around the app's navigator:
 ///
 /// ```dart
@@ -16,6 +16,7 @@ import 'replyze_chat.dart';
 /// Replyze.show(context) also puts an empty route on your navigator, so
 /// Android's back button closes the chat.
 class ReplyzeHost extends StatefulWidget {
+  /// The chat over [child] (your app's navigator).
   const ReplyzeHost({
     super.key,
     required this.child,
@@ -26,17 +27,24 @@ class ReplyzeHost extends StatefulWidget {
     this.errorBuilder,
   });
 
+  /// Your app: the `child` MaterialApp.builder gives you.
   final Widget child;
 
-  /// Load the chat when the app starts (hidden). False loads it on the first show().
+  /// Load the chat when the app starts (hidden), so replies count as unread.
+  /// False loads it on the first [Replyze.show].
   final bool preload;
 
-  /// Your MaterialApp's navigatorKey, for show() without a context.
+  /// Your MaterialApp's navigatorKey, for [Replyze.show] without a context
+  /// (so Android's back button still closes the chat).
   final GlobalKey<NavigatorState>? navigatorKey;
 
   /// The visitor closed the chat.
   final VoidCallback? onClose;
+
+  /// `load_timeout`, `help_unavailable`, `invalid_options`...
   final ValueChanged<ReplyzeError>? onError;
+
+  /// What to show when the chat can't load; see [ReplyzeChat.errorBuilder].
   final Widget Function(BuildContext context, VoidCallback retry, ReplyzeError error)? errorBuilder;
 
   @override

@@ -26,4 +26,5 @@ export 'src/protocol.dart'
 export 'src/replyze.dart' show Replyze, ReplyzeHostHandle;
 export 'src/replyze_chat.dart' show ReplyzeChat, ReplyzeChatState;
 export 'src/replyze_host.dart' show ReplyzeHost;
-export 'src/session.dart' show ReplyzeConnection, ReplyzeConnectionHandlers, ReplyzeSession;
+export 'src/session.dart'
+    show ReplyzeConnection, ReplyzeConnectionHandlers, ReplyzeSession;

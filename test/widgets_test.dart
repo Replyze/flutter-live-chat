@@ -1,10 +1,11 @@
 // ReplyzeChat and ReplyzeHost on a fake WebView platform: the page they
 // load, the JavaScript channel the widget posts to, the commands they run
-// in the page, and where links go.
+// in the page, and where links go. Widgets only (WidgetsApp), as the package
+// itself uses no Material.
 
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:replyze_flutter/replyze_flutter.dart';
 import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
@@ -13,23 +14,26 @@ class FakeWebViewPlatform extends WebViewPlatform {
   final List<FakeController> controllers = [];
 
   @override
-  PlatformWebViewController createPlatformWebViewController(PlatformWebViewControllerCreationParams params) {
+  PlatformWebViewController createPlatformWebViewController(
+      PlatformWebViewControllerCreationParams params) {
     final controller = FakeController(params);
     controllers.add(controller);
     return controller;
   }
 
   @override
-  PlatformNavigationDelegate createPlatformNavigationDelegate(PlatformNavigationDelegateCreationParams params) =>
+  PlatformNavigationDelegate createPlatformNavigationDelegate(
+          PlatformNavigationDelegateCreationParams params) =>
       FakeNavigationDelegate(params);
 
   @override
-  PlatformWebViewWidget createPlatformWebViewWidget(PlatformWebViewWidgetCreationParams params) =>
+  PlatformWebViewWidget createPlatformWebViewWidget(
+          PlatformWebViewWidgetCreationParams params) =>
       FakeWebViewWidget(params);
 }
 
 class FakeController extends PlatformWebViewController {
-  FakeController(PlatformWebViewControllerCreationParams params) : super.implementation(params);
+  FakeController(super.params) : super.implementation();
 
   String? html;
   String? baseUrl;
@@ -41,7 +45,8 @@ class FakeController extends PlatformWebViewController {
   /// The widget posts one event to the app, as widget.js does in the page.
   void post(String type, [Map<String, Object?> data = const {}]) {
     channels['ReplyzeFlutter']!.onMessageReceived(
-      JavaScriptMessage(message: jsonEncode({'replyze': 1, 'type': type, 'data': data})),
+      JavaScriptMessage(
+          message: jsonEncode({'replyze': 1, 'type': type, 'data': data})),
     );
   }
 
@@ -53,7 +58,8 @@ class FakeController extends PlatformWebViewController {
         return jsonDecode(script.substring(from, to)) as Map<String, dynamic>;
       }).toList();
 
-  List<String> get commandNames => commands.map((c) => c['cmd'] as String).toList();
+  List<String> get commandNames =>
+      commands.map((c) => c['cmd'] as String).toList();
 
   @override
   Future<void> loadHtmlString(String html, {String? baseUrl}) async {
@@ -70,12 +76,14 @@ class FakeController extends PlatformWebViewController {
   Future<void> setBackgroundColor(Color color) async {}
 
   @override
-  Future<void> addJavaScriptChannel(JavaScriptChannelParams javaScriptChannelParams) async {
+  Future<void> addJavaScriptChannel(
+      JavaScriptChannelParams javaScriptChannelParams) async {
     channels[javaScriptChannelParams.name] = javaScriptChannelParams;
   }
 
   @override
-  Future<void> setPlatformNavigationDelegate(PlatformNavigationDelegate handler) async {
+  Future<void> setPlatformNavigationDelegate(
+      PlatformNavigationDelegate handler) async {
     navigation = handler as FakeNavigationDelegate;
   }
 
@@ -86,21 +94,24 @@ class FakeController extends PlatformWebViewController {
 }
 
 class FakeNavigationDelegate extends PlatformNavigationDelegate {
-  FakeNavigationDelegate(PlatformNavigationDelegateCreationParams params) : super.implementation(params);
+  FakeNavigationDelegate(super.params) : super.implementation();
 
   NavigationRequestCallback? onNavigationRequest;
 
-  Future<NavigationDecision> request(String url, {bool isMainFrame = true}) async =>
-      onNavigationRequest!(NavigationRequest(url: url, isMainFrame: isMainFrame));
+  Future<NavigationDecision> request(String url,
+          {bool isMainFrame = true}) async =>
+      onNavigationRequest!(
+          NavigationRequest(url: url, isMainFrame: isMainFrame));
 
   @override
-  Future<void> setOnNavigationRequest(NavigationRequestCallback onNavigationRequest) async {
+  Future<void> setOnNavigationRequest(
+      NavigationRequestCallback onNavigationRequest) async {
     this.onNavigationRequest = onNavigationRequest;
   }
 }
 
 class FakeWebViewWidget extends PlatformWebViewWidget {
-  FakeWebViewWidget(PlatformWebViewWidgetCreationParams params) : super.implementation(params);
+  FakeWebViewWidget(super.params) : super.implementation();
 
   @override
   Widget build(BuildContext context) => const SizedBox.expand();
@@ -113,6 +124,20 @@ class HomeStub extends StatelessWidget {
   Widget build(BuildContext context) => const Text('home');
 }
 
+/// An app with a navigator (and Android's back button), without Material.
+Widget app({required Widget home, TransitionBuilder? builder}) {
+  return WidgetsApp(
+    color: const Color(0xFF000000),
+    builder: builder,
+    home: home,
+    pageRouteBuilder: <T>(RouteSettings settings, WidgetBuilder page) =>
+        PageRouteBuilder<T>(
+      settings: settings,
+      pageBuilder: (context, animation, secondaryAnimation) => page(context),
+    ),
+  );
+}
+
 void main() {
   late FakeWebViewPlatform platform;
 
@@ -121,22 +146,29 @@ void main() {
     WebViewPlatform.instance = platform;
   });
 
-  testWidgets('ReplyzeChat with a bad option reports it and loads nothing', (tester) async {
+  testWidgets('ReplyzeChat with a bad option reports it and loads nothing',
+      (tester) async {
     final errors = <ReplyzeError>[];
-    await tester.pumpWidget(MaterialApp(
-      home: ReplyzeChat(options: const ReplyzeOptions(widgetToken: ''), onError: errors.add),
+    await tester.pumpWidget(app(
+      home: ReplyzeChat(
+          options: const ReplyzeOptions(widgetToken: ''), onError: errors.add),
     ));
     expect(errors.single.code, 'invalid_options');
     expect(platform.controllers, isEmpty);
   });
 
-  testWidgets('ReplyzeChat loads widget.js in in-app mode and talks over ReplyzeFlutter', (tester) async {
+  testWidgets(
+      'ReplyzeChat loads widget.js in in-app mode and talks over ReplyzeFlutter',
+      (tester) async {
     var ready = 0;
     var closed = 0;
     final links = <String>[];
-    await tester.pumpWidget(MaterialApp(
+    await tester.pumpWidget(app(
       home: ReplyzeChat(
-        options: const ReplyzeOptions(widgetToken: 'wgt_test', baseUrl: 'https://shop.example/app', language: 'de'),
+        options: const ReplyzeOptions(
+            widgetToken: 'wgt_test',
+            baseUrl: 'https://shop.example/app',
+            language: 'de'),
         onReady: () => ready++,
         onClose: () => closed++,
         onOpenUrl: links.add,
@@ -168,19 +200,53 @@ void main() {
     expect(closed, 1);
 
     // The chat page stays; links and other pages go to the app.
-    expect(await web.navigation!.request('https://shop.example/app'), NavigationDecision.navigate);
-    expect(await web.navigation!.request('about:blank'), NavigationDecision.navigate);
-    expect(await web.navigation!.request('https://www.youtube.com/embed/x', isMainFrame: false),
+    expect(await web.navigation!.request('https://shop.example/app'),
         NavigationDecision.navigate);
-    expect(await web.navigation!.request('https://shop.example/returns'), NavigationDecision.prevent);
-    expect(await web.navigation!.request('javascript:alert(1)'), NavigationDecision.prevent);
+    expect(await web.navigation!.request('about:blank'),
+        NavigationDecision.navigate);
+    expect(
+        await web.navigation!
+            .request('https://www.youtube.com/embed/x', isMainFrame: false),
+        NavigationDecision.navigate);
+    expect(await web.navigation!.request('https://shop.example/returns'),
+        NavigationDecision.prevent);
+    expect(await web.navigation!.request('javascript:alert(1)'),
+        NavigationDecision.prevent);
     expect(links, ['https://shop.example/returns']);
   });
 
-  testWidgets('ReplyzeHost preloads the chat hidden; show() opens it and back closes it', (tester) async {
+  testWidgets('ReplyzeChat shows a retry when the chat does not load',
+      (tester) async {
+    final errors = <String>[];
+    await tester.pumpWidget(app(
+      home: ReplyzeChat(
+        options: const ReplyzeOptions(widgetToken: 'wgt_test'),
+        onError: (error) => errors.add(error.code),
+      ),
+    ));
+    expect(find.text("The chat couldn't load."), findsNothing);
+
+    // No ready from the page within 20 seconds
+    await tester.pump(const Duration(seconds: 21));
+    expect(errors, ['load_timeout']);
+    expect(find.text("The chat couldn't load."), findsOneWidget);
+
+    // Try again: a fresh WebView, and the message goes once it is ready
+    await tester.tap(find.text('Try again'));
+    await tester.pump();
+    expect(platform.controllers, hasLength(2));
+    platform.controllers.last.post('ready', {'version': 1});
+    await tester.pump();
+    expect(find.text("The chat couldn't load."), findsNothing);
+  });
+
+  testWidgets(
+      'ReplyzeHost preloads the chat hidden; show() opens it and back closes it',
+      (tester) async {
     var closes = 0;
-    await tester.pumpWidget(MaterialApp(
-      builder: (context, child) => ReplyzeHost(onClose: () => closes++, child: child!),
+    await tester.pumpWidget(app(
+      builder: (context, child) =>
+          ReplyzeHost(onClose: () => closes++, child: child!),
       home: const HomeStub(),
     ));
     // Not configured yet: only the app.

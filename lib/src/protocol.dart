@@ -175,7 +175,8 @@ class ReplyzeMessage {
       other.type == type;
 
   @override
-  int get hashCode => Object.hash(id, text, sender, senderName, createdAt, type);
+  int get hashCode =>
+      Object.hash(id, text, sender, senderName, createdAt, type);
 
   @override
   String toString() => 'ReplyzeMessage($id, $sender: $text)';
@@ -194,7 +195,8 @@ class ReplyzeError {
   final String message;
 
   @override
-  bool operator ==(Object other) => other is ReplyzeError && other.code == code && other.message == message;
+  bool operator ==(Object other) =>
+      other is ReplyzeError && other.code == code && other.message == message;
 
   @override
   int get hashCode => Object.hash(code, message);
@@ -296,10 +298,12 @@ String _checkUrl(String name, String value) {
       uri.host.isEmpty ||
       uri.userInfo.isNotEmpty ||
       _unsafeUrlChars.hasMatch(trimmed)) {
-    throw ReplyzeConfigError('$name must be an absolute http(s) URL without credentials, got "$value".');
+    throw ReplyzeConfigError(
+        '$name must be an absolute http(s) URL without credentials, got "$value".');
   }
   if (uri.scheme != 'https' && !_devHosts.contains(uri.host)) {
-    throw ReplyzeConfigError('$name must use https (http only for localhost), got "$value".');
+    throw ReplyzeConfigError(
+        '$name must use https (http only for localhost), got "$value".');
   }
   return trimmed;
 }
@@ -310,12 +314,14 @@ String _stripSlash(String url) => url.replaceAll(RegExp(r'/+$'), '');
 ResolvedOptions resolveOptions(ReplyzeOptions? options) {
   final token = options?.widgetToken.trim() ?? '';
   if (!_token.hasMatch(token)) {
-    throw ReplyzeConfigError('widgetToken is missing or invalid. Copy it from Settings → Integrations → Install widget ("wgt_...").');
+    throw ReplyzeConfigError(
+        'widgetToken is missing or invalid. Copy it from Settings → Integrations → Install widget ("wgt_...").');
   }
   final o = options!;
   final language = (o.language ?? '').trim();
   if (language.isNotEmpty && !_language.hasMatch(language)) {
-    throw ReplyzeConfigError('language must be a language code like "de" or "pt-BR", got "$language".');
+    throw ReplyzeConfigError(
+        'language must be a language code like "de" or "pt-BR", got "$language".');
   }
   final title = (o.pageTitle ?? '').trim();
   return ResolvedOptions(
@@ -326,20 +332,26 @@ ResolvedOptions resolveOptions(ReplyzeOptions? options) {
     language: language.isEmpty ? null : language,
     tracking: o.tracking,
     showCloseButton: o.showCloseButton,
-    pageTitle: title.isEmpty ? defaultPageTitle : (title.length > 120 ? title.substring(0, 120) : title),
+    pageTitle: title.isEmpty
+        ? defaultPageTitle
+        : (title.length > 120 ? title.substring(0, 120) : title),
   );
 }
 
 /// For text and double-quoted attributes (every attribute here is double-quoted).
-String _escape(String value) =>
-    value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+String _escape(String value) => value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
 
 /// The chat page: widget.js in in-app mode, configured by data attributes,
 /// so there is no inline script and the page's CSP allows scripts from the
 /// widget's CDN only. Loaded with loadHtmlString(html, baseUrl: baseUrl).
 String buildChatHtml(ResolvedOptions o) {
   final cdn = Uri.parse(o.cdnUrl);
-  final cdnOrigin = '${cdn.scheme}://${cdn.host}${cdn.hasPort ? ':${cdn.port}' : ''}';
+  final cdnOrigin =
+      '${cdn.scheme}://${cdn.host}${cdn.hasPort ? ':${cdn.port}' : ''}';
   final dev = o.apiUrl.startsWith('http:') || o.cdnUrl.startsWith('http:');
   final csp = [
     "default-src 'none'",
@@ -408,7 +420,9 @@ WidgetEvent? parseEvent(Object? raw) {
     }
   }
   if (value is! Map) return null;
-  if (value['replyze'] != replyzeProtocolVersion || value['type'] is! String) return null;
+  if (value['replyze'] != replyzeProtocolVersion || value['type'] is! String) {
+    return null;
+  }
   final rawData = value['data'];
   final data = rawData is Map ? rawData : const <String, Object?>{};
 
@@ -420,7 +434,8 @@ WidgetEvent? parseEvent(Object? raw) {
       return const CloseEvent();
     case 'unread':
       final count = data['count'];
-      return UnreadEvent(count is num && count.isFinite ? (count < 0 ? 0 : count.floor()) : 0);
+      return UnreadEvent(
+          count is num && count.isFinite ? (count < 0 ? 0 : count.floor()) : 0);
     case 'message':
       return MessageEvent(ReplyzeMessage(
         id: _str(data['id']) ?? '',
@@ -436,22 +451,28 @@ WidgetEvent? parseEvent(Object? raw) {
       final url = _str(data['url']);
       return url != null && isExternalUrl(url) ? OpenUrlEvent(url) : null;
     case 'error':
-      return ErrorEvent(ReplyzeError(_str(data['code']) ?? 'unknown', _str(data['message']) ?? ''));
+      return ErrorEvent(ReplyzeError(
+          _str(data['code']) ?? 'unknown', _str(data['message']) ?? ''));
     case 'log':
-      return LogEvent(_str(data['level']) ?? 'info', _str(data['message']) ?? '');
+      return LogEvent(
+          _str(data['level']) ?? 'info', _str(data['message']) ?? '');
     default:
       return null;
   }
 }
 
-final RegExp _external = RegExp(r'^(https?://|mailto:|tel:|sms:)', caseSensitive: false);
+final RegExp _external =
+    RegExp(r'^(https?://|mailto:|tel:|sms:)', caseSensitive: false);
 
 /// Links the app opens itself: web pages, email, phone and SMS.
 bool isExternalUrl(String url) => _external.hasMatch(url.trim());
 
 /// Whether the WebView may load this URL itself: only the chat page.
 bool isChatPage(String url, String baseUrl) {
-  if (url.isEmpty || url == 'about:blank' || url.startsWith('about:srcdoc') || url.startsWith('data:')) return true;
+  if (url.isEmpty ||
+      url == 'about:blank' ||
+      url.startsWith('about:srcdoc') ||
+      url.startsWith('data:')) return true;
   String strip(String u) => u.split('#').first.replaceAll(RegExp(r'/+$'), '');
   return strip(url) == strip(baseUrl);
 }
@@ -484,6 +505,10 @@ Map<String, Object?>? identifyCommand(ReplyzeUser user) {
   }
   final hash = user.userHash?.trim() ?? '';
   if (hash.isNotEmpty) args['user_hash'] = hash;
-  if (!args.containsKey('email') && !args.containsKey('name') && !args.containsKey('user_id')) return null;
+  if (!args.containsKey('email') &&
+      !args.containsKey('name') &&
+      !args.containsKey('user_id')) {
+    return null;
+  }
   return {'cmd': 'identify', 'args': args};
 }

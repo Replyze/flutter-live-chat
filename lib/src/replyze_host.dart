@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import 'protocol.dart';
 import 'replyze.dart';
@@ -45,13 +45,16 @@ class ReplyzeHost extends StatefulWidget {
   final ValueChanged<ReplyzeError>? onError;
 
   /// What to show when the chat can't load; see [ReplyzeChat.errorBuilder].
-  final Widget Function(BuildContext context, VoidCallback retry, ReplyzeError error)? errorBuilder;
+  final Widget Function(
+          BuildContext context, VoidCallback retry, ReplyzeError error)?
+      errorBuilder;
 
   @override
   State<ReplyzeHost> createState() => _ReplyzeHostState();
 }
 
-class _ReplyzeHostState extends State<ReplyzeHost> implements ReplyzeHostHandle {
+class _ReplyzeHostState extends State<ReplyzeHost>
+    implements ReplyzeHostHandle {
   bool _visible = false;
   late bool _loaded = widget.preload;
   Route<void>? _backRoute;
@@ -85,14 +88,17 @@ class _ReplyzeHostState extends State<ReplyzeHost> implements ReplyzeHostHandle 
       _loaded = true;
       _visible = true;
     });
-    final navigator = context != null ? Navigator.maybeOf(context, rootNavigator: true) : widget.navigatorKey?.currentState;
+    final navigator = context != null
+        ? Navigator.maybeOf(context, rootNavigator: true)
+        : widget.navigatorKey?.currentState;
     if (navigator == null) return;
     // An empty, see-through route: the back button pops it, which closes the chat.
     final route = PageRouteBuilder<void>(
       opaque: false,
       transitionDuration: Duration.zero,
       reverseTransitionDuration: Duration.zero,
-      pageBuilder: (context, animation, secondaryAnimation) => const SizedBox.shrink(),
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          const SizedBox.shrink(),
     );
     _backRoute = route;
     navigator.push(route).then((_) {
@@ -119,7 +125,9 @@ class _ReplyzeHostState extends State<ReplyzeHost> implements ReplyzeHostHandle 
     final media = MediaQuery.maybeOf(context);
     // Android doesn't shrink a WebView inside Flutter for the keyboard: the
     // chat is padded instead. iOS's WebView moves its page itself.
-    final keyboard = defaultTargetPlatform == TargetPlatform.android ? (media?.viewInsets.bottom ?? 0.0) : 0.0;
+    final keyboard = defaultTargetPlatform == TargetPlatform.android
+        ? (media?.viewInsets.bottom ?? 0.0)
+        : 0.0;
     final padding = media?.padding ?? EdgeInsets.zero;
 
     return Stack(

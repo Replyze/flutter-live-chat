@@ -12,13 +12,15 @@ class FakeWebView {
     const start = 'window.ReplyzeApp.receive(';
     final from = script.indexOf(start) + start.length;
     final to = script.lastIndexOf(');}catch');
-    commands.add(jsonDecode(script.substring(from, to)) as Map<String, dynamic>);
+    commands
+        .add(jsonDecode(script.substring(from, to)) as Map<String, dynamic>);
   }
 
   List<String> get names => commands.map((c) => c['cmd'] as String).toList();
 }
 
-String event(String type, [Map<String, Object?>? data]) => jsonEncode({'replyze': 1, 'type': type, 'data': data});
+String event(String type, [Map<String, Object?>? data]) =>
+    jsonEncode({'replyze': 1, 'type': type, 'data': data});
 
 void main() {
   late List<String> logs;
@@ -26,7 +28,9 @@ void main() {
 
   setUp(() {
     logs = [];
-    session = ReplyzeSession(readyTimeout: const Duration(milliseconds: 50), log: (_, message) => logs.add(message));
+    session = ReplyzeSession(
+        readyTimeout: const Duration(milliseconds: 50),
+        log: (_, message) => logs.add(message));
   });
 
   test('holds commands until ready, then sends them in the right order', () {
@@ -35,7 +39,8 @@ void main() {
     connection.setInsets(const ReplyzeInsets(top: 47, bottom: 34));
     connection.setVisible(true);
     session.pushEvent('Opened app', {'build': 12});
-    session.identify(const ReplyzeUser(email: 'ana@shop.example', userId: 7, userHash: 'h'));
+    session.identify(
+        const ReplyzeUser(email: 'ana@shop.example', userId: 7, userHash: 'h'));
     session.setLanguage('de');
     session.setData({'plan': 'pro'});
     session.setData({'seats': 3, 'plan': 'team'});
@@ -94,7 +99,8 @@ void main() {
     expect(web.names, ['setLanguage', 'identify', 'close', 'pushEvent']);
   });
 
-  test('a reset asked for before ready goes first, and forgets the old user', () {
+  test('a reset asked for before ready goes first, and forgets the old user',
+      () {
     final web = FakeWebView();
     final connection = session.connect(web.inject);
     session.identify(const ReplyzeUser(email: 'old@shop.example'));
@@ -138,17 +144,25 @@ void main() {
     session.errors.listen(errors.add);
     final connection = session.connect(
       FakeWebView().inject,
-      ReplyzeConnectionHandlers(onClose: () => closes.add('close'), onOpenUrl: urls.add, onError: handlerErrors.add),
+      ReplyzeConnectionHandlers(
+          onClose: () => closes.add('close'),
+          onOpenUrl: urls.add,
+          onError: handlerErrors.add),
     );
     connection.receive(event('ready'));
-    connection.receive(event('message', {'id': '5', 'text': 'Hello', 'sender': 'agent'}));
+    connection.receive(
+        event('message', {'id': '5', 'text': 'Hello', 'sender': 'agent'}));
     connection.receive(event('close'));
-    connection.receive(event('openUrl', {'url': 'https://shop.example/returns'}));
+    connection
+        .receive(event('openUrl', {'url': 'https://shop.example/returns'}));
     connection.receive(event('openUrl', {'url': 'javascript:alert(1)'}));
-    connection.receive(event('error', {'code': 'help_unavailable', 'message': 'no help'}));
-    connection.receive(event('log', {'level': 'warn', 'message': '[Replyze] Widget blocked'}));
+    connection.receive(
+        event('error', {'code': 'help_unavailable', 'message': 'no help'}));
+    connection.receive(
+        event('log', {'level': 'warn', 'message': '[Replyze] Widget blocked'}));
 
-    expect(messages, [const ReplyzeMessage(id: '5', text: 'Hello', sender: 'agent')]);
+    expect(messages,
+        [const ReplyzeMessage(id: '5', text: 'Hello', sender: 'agent')]);
     expect(closes, ['close']);
     expect(urls, ['https://shop.example/returns']);
     expect(handlerErrors, [const ReplyzeError('help_unavailable', 'no help')]);
@@ -159,8 +173,10 @@ void main() {
   test('reports a chat that never loads, but not one that did', () async {
     final slow = <ReplyzeError>[];
     final fast = <ReplyzeError>[];
-    session.connect(FakeWebView().inject, ReplyzeConnectionHandlers(onError: slow.add));
-    final ok = session.connect(FakeWebView().inject, ReplyzeConnectionHandlers(onError: fast.add));
+    session.connect(
+        FakeWebView().inject, ReplyzeConnectionHandlers(onError: slow.add));
+    final ok = session.connect(
+        FakeWebView().inject, ReplyzeConnectionHandlers(onError: fast.add));
     ok.receive(event('ready'));
     await Future<void>.delayed(const Duration(milliseconds: 120));
     expect(slow.single.code, 'load_timeout');

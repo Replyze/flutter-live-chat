@@ -1,5 +1,12 @@
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  exclude:
+    - build/**
+    # The example is an app of its own (its own pubspec and analysis
+    # options, Flutter 3.47 or newer); CI analyzes it in example/.
+    - example/**
+
 linter:
   rules:
     - prefer_single_quotes

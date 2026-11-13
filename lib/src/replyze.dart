@@ -27,7 +27,8 @@ class Replyze {
   /// The bridge state shared by every chat view.
   static final ReplyzeSession session = ReplyzeSession();
 
-  static final ValueNotifier<ReplyzeOptions?> _options = ValueNotifier<ReplyzeOptions?>(null);
+  static final ValueNotifier<ReplyzeOptions?> _options =
+      ValueNotifier<ReplyzeOptions?>(null);
   static final List<ReplyzeHostHandle> _hosts = [];
   static final ValueNotifier<int> _unread = _followUnread();
 
@@ -54,7 +55,8 @@ class Replyze {
   static void show([BuildContext? context]) {
     final host = _host;
     if (host == null) {
-      debugPrint('[Replyze] show(): wrap your app in ReplyzeHost first (MaterialApp.builder).');
+      debugPrint(
+          '[Replyze] show(): wrap your app in ReplyzeHost first (MaterialApp.builder).');
       return;
     }
     host.show(context);
@@ -75,7 +77,8 @@ class Replyze {
   static void setData(Map<String, Object?> data) => session.setData(data);
 
   /// An event on the user's timeline in the inbox.
-  static void pushEvent(String name, [Map<String, Object?>? data]) => session.pushEvent(name, data);
+  static void pushEvent(String name, [Map<String, Object?>? data]) =>
+      session.pushEvent(name, data);
 
   /// The chat's language ("de", "sr", "ar"...), over the device's.
   static void setLanguage(String language) => session.setLanguage(language);

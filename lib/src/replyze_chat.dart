@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:file_selector/file_selector.dart' as files;
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
@@ -36,7 +36,7 @@ class ReplyzeChat extends StatefulWidget {
     this.onError,
     this.onOpenUrl,
     this.errorBuilder,
-    this.backgroundColor = Colors.white,
+    this.backgroundColor = const Color(0xFFFFFFFF),
   });
 
   /// Instead of Replyze.configure()'s options.
@@ -70,7 +70,9 @@ class ReplyzeChat extends StatefulWidget {
 
   /// What to show when the chat can't load (no connection, wrong token).
   /// Default: a short message and "Try again".
-  final Widget Function(BuildContext context, VoidCallback retry, ReplyzeError error)? errorBuilder;
+  final Widget Function(
+          BuildContext context, VoidCallback retry, ReplyzeError error)?
+      errorBuilder;
 
   /// The colour behind the page while it loads. Default white.
   final Color backgroundColor;
@@ -93,8 +95,10 @@ class ReplyzeChatState extends State<ReplyzeChat> {
   void initState() {
     super.initState();
     Replyze.optionsListenable.addListener(_optionsChanged);
-    _subscriptions.add(Replyze.session.messages.listen((message) => widget.onMessage?.call(message)));
-    _subscriptions.add(Replyze.session.unreadCountChanges.listen((count) => widget.onUnreadCountChange?.call(count)));
+    _subscriptions.add(Replyze.session.messages
+        .listen((message) => widget.onMessage?.call(message)));
+    _subscriptions.add(Replyze.session.unreadCountChanges
+        .listen((count) => widget.onUnreadCountChange?.call(count)));
     _load();
   }
 
@@ -105,8 +109,12 @@ class ReplyzeChatState extends State<ReplyzeChat> {
       _load();
       return;
     }
-    if (oldWidget.visible != widget.visible) _connection?.setVisible(widget.visible);
-    if (!_sameInsets(oldWidget.insets, widget.insets)) _connection?.setInsets(widget.insets);
+    if (oldWidget.visible != widget.visible) {
+      _connection?.setVisible(widget.visible);
+    }
+    if (!_sameInsets(oldWidget.insets, widget.insets)) {
+      _connection?.setInsets(widget.insets);
+    }
   }
 
   @override
@@ -123,7 +131,9 @@ class ReplyzeChatState extends State<ReplyzeChat> {
   void reload() => setState(_load);
 
   void _optionsChanged() {
-    if (widget.options == null && _htmlFor(_mergedOptions()) != _html) setState(_load);
+    if (widget.options == null && _htmlFor(_mergedOptions()) != _html) {
+      setState(_load);
+    }
   }
 
   ReplyzeOptions? _mergedOptions() => widget.options ?? Replyze.options;
@@ -165,7 +175,9 @@ class ReplyzeChatState extends State<ReplyzeChat> {
         onClose: () => widget.onClose?.call(),
         onOpenUrl: _openUrl,
         onError: (error) {
-          if (error.code == 'load_timeout' && mounted) setState(() => _failure = error);
+          if (error.code == 'load_timeout' && mounted) {
+            setState(() => _failure = error);
+          }
           widget.onError?.call(error);
         },
       ),
@@ -174,13 +186,15 @@ class ReplyzeChatState extends State<ReplyzeChat> {
     controller
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(widget.backgroundColor)
-      // The widget posts its events to window.ReplyzeFlutter (widget/src/embed/app.ts)
-      ..addJavaScriptChannel('ReplyzeFlutter', onMessageReceived: (message) => connection.receive(message.message))
+      // The widget posts its events to window.ReplyzeFlutter.
+      ..addJavaScriptChannel('ReplyzeFlutter',
+          onMessageReceived: (message) => connection.receive(message.message))
       ..setNavigationDelegate(NavigationDelegate(
         onNavigationRequest: (request) {
           // Only the chat page itself (and frames inside it, e.g. a video in
           // a help article); links open outside the app's chat.
-          if (!request.isMainFrame || isChatPage(request.url, resolved.baseUrl)) {
+          if (!request.isMainFrame ||
+              isChatPage(request.url, resolved.baseUrl)) {
             return NavigationDecision.navigate;
           }
           _openUrl(request.url);
@@ -213,30 +227,42 @@ class ReplyzeChatState extends State<ReplyzeChat> {
     }
     final uri = Uri.tryParse(url);
     if (uri != null) {
-      launchUrl(uri, mode: LaunchMode.externalApplication).catchError((Object _) => false);
+      launchUrl(uri, mode: LaunchMode.externalApplication)
+          .catchError((Object _) => false);
     }
   }
 
   static Future<List<String>> _pickFiles(FileSelectorParams params) async {
     final mimeTypes = params.acceptTypes.where((t) => t.contains('/')).toList();
-    final extensions = params.acceptTypes.where((t) => t.startsWith('.')).map((t) => t.substring(1)).toList();
+    final extensions = params.acceptTypes
+        .where((t) => t.startsWith('.'))
+        .map((t) => t.substring(1))
+        .toList();
     final groups = mimeTypes.isEmpty && extensions.isEmpty
         ? const <files.XTypeGroup>[]
-        : [files.XTypeGroup(label: 'Files', mimeTypes: mimeTypes, extensions: extensions)];
+        : [
+            files.XTypeGroup(
+                label: 'Files', mimeTypes: mimeTypes, extensions: extensions)
+          ];
     try {
       if (params.mode == FileSelectorMode.openMultiple) {
         final picked = await files.openFiles(acceptedTypeGroups: groups);
         return picked.map((f) => Uri.file(f.path).toString()).toList();
       }
       final picked = await files.openFile(acceptedTypeGroups: groups);
-      return picked == null ? const <String>[] : [Uri.file(picked.path).toString()];
+      return picked == null
+          ? const <String>[]
+          : [Uri.file(picked.path).toString()];
     } catch (_) {
       return const <String>[];
     }
   }
 
   static bool _sameInsets(ReplyzeInsets? a, ReplyzeInsets? b) =>
-      a?.top == b?.top && a?.right == b?.right && a?.bottom == b?.bottom && a?.left == b?.left;
+      a?.top == b?.top &&
+      a?.right == b?.right &&
+      a?.bottom == b?.bottom &&
+      a?.left == b?.left;
 
   @override
   Widget build(BuildContext context) {
@@ -246,17 +272,21 @@ class ReplyzeChatState extends State<ReplyzeChat> {
     return Stack(
       alignment: Alignment.topLeft,
       children: [
-        Positioned.fill(child: WebViewWidget(key: ValueKey<int>(_generation), controller: controller)),
+        Positioned.fill(
+            child: WebViewWidget(
+                key: ValueKey<int>(_generation), controller: controller)),
         if (failure != null)
           Positioned.fill(
             child: widget.errorBuilder?.call(context, reload, failure) ??
-                _DefaultError(onRetry: reload, background: widget.backgroundColor),
+                _DefaultError(
+                    onRetry: reload, background: widget.backgroundColor),
           ),
       ],
     );
   }
 }
 
+/// Widgets only, no Material or Cupertino, so it fits any app.
 class _DefaultError extends StatelessWidget {
   const _DefaultError({required this.onRetry, required this.background});
 
@@ -265,16 +295,45 @@ class _DefaultError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    return ColoredBox(
       color: background,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text("The chat couldn't load.", style: TextStyle(fontSize: 16)),
-            const SizedBox(height: 12),
-            TextButton(onPressed: onRetry, child: const Text('Try again')),
-          ],
+      child: DefaultTextStyle(
+        style: const TextStyle(
+          fontSize: 16,
+          color: Color(0xFF1F2937),
+          decoration: TextDecoration.none,
+        ),
+        textAlign: TextAlign.center,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("The chat couldn't load."),
+              const SizedBox(height: 16),
+              Semantics(
+                button: true,
+                child: GestureDetector(
+                  onTap: onRetry,
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFEEF0F3),
+                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                    ),
+                    child: const Text(
+                      'Try again',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF111827),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

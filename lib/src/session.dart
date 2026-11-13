@@ -14,7 +14,8 @@ typedef ReplyzeInjector = void Function(String script);
 /// What one chat view hears from its WebView.
 class ReplyzeConnectionHandlers {
   /// Handlers for one connection; each is optional.
-  const ReplyzeConnectionHandlers({this.onReady, this.onClose, this.onOpenUrl, this.onError});
+  const ReplyzeConnectionHandlers(
+      {this.onReady, this.onClose, this.onOpenUrl, this.onError});
 
   /// The widget in this WebView is ready (also after a reload).
   final void Function()? onReady;
@@ -35,7 +36,8 @@ const Set<String> _sticky = {'identify', 'setLanguage', 'setData'};
 /// One WebView's end of the bridge, from [ReplyzeSession.connect]. Only
 /// needed for a WebView of your own; ReplyzeChat makes its own.
 class ReplyzeConnection {
-  ReplyzeConnection._(this._session, this._inject, this._handlers, this._timeout) {
+  ReplyzeConnection._(
+      this._session, this._inject, this._handlers, this._timeout) {
     _startTimer();
   }
 
@@ -144,7 +146,8 @@ class ReplyzeConnection {
     _timer = Timer(_timeout, () {
       _timer = null;
       if (_ready || _gone) return;
-      const error = ReplyzeError('load_timeout', 'The chat did not load. Check the connection and the widget token.');
+      const error = ReplyzeError('load_timeout',
+          'The chat did not load. Check the connection and the widget token.');
       _handlers.onError?.call(error);
       _session._errorController.add(error);
     });
@@ -157,7 +160,9 @@ class ReplyzeConnection {
 class ReplyzeSession {
   /// A session; [readyTimeout] is how long a WebView may take to load, and
   /// [log] gets the widget's warnings (default: printed in debug builds).
-  ReplyzeSession({this.readyTimeout = const Duration(seconds: 20), void Function(String level, String message)? log})
+  ReplyzeSession(
+      {this.readyTimeout = const Duration(seconds: 20),
+      void Function(String level, String message)? log})
       : _log = log ?? _defaultLog;
 
   /// How long a WebView may take to say it is ready.
@@ -170,16 +175,25 @@ class ReplyzeSession {
   Map<String, Object?> _data = {};
   int _unread = 0;
 
-  final StreamController<int> _unreadController = StreamController<int>.broadcast(sync: true);
-  final StreamController<ReplyzeMessage> _messageController = StreamController<ReplyzeMessage>.broadcast(sync: true);
-  final StreamController<void> _closeController = StreamController<void>.broadcast(sync: true);
-  final StreamController<void> _readyController = StreamController<void>.broadcast(sync: true);
-  final StreamController<ReplyzeError> _errorController = StreamController<ReplyzeError>.broadcast(sync: true);
-  final StreamController<bool> _identifiedController = StreamController<bool>.broadcast(sync: true);
+  final StreamController<int> _unreadController =
+      StreamController<int>.broadcast(sync: true);
+  final StreamController<ReplyzeMessage> _messageController =
+      StreamController<ReplyzeMessage>.broadcast(sync: true);
+  final StreamController<void> _closeController =
+      StreamController<void>.broadcast(sync: true);
+  final StreamController<void> _readyController =
+      StreamController<void>.broadcast(sync: true);
+  final StreamController<ReplyzeError> _errorController =
+      StreamController<ReplyzeError>.broadcast(sync: true);
+  final StreamController<bool> _identifiedController =
+      StreamController<bool>.broadcast(sync: true);
 
   /// A WebView joins: it gets every command from now on, and the user's state when ready.
-  ReplyzeConnection connect(ReplyzeInjector inject, [ReplyzeConnectionHandlers handlers = const ReplyzeConnectionHandlers()]) {
-    final connection = ReplyzeConnection._(this, inject, handlers, readyTimeout);
+  ReplyzeConnection connect(ReplyzeInjector inject,
+      [ReplyzeConnectionHandlers handlers =
+          const ReplyzeConnectionHandlers()]) {
+    final connection =
+        ReplyzeConnection._(this, inject, handlers, readyTimeout);
     _connections.add(connection);
     return connection;
   }
@@ -227,7 +241,8 @@ class ReplyzeSession {
       if (value == null || value is String || value is num || value is bool) {
         clean[key] = value;
       } else {
-        _log('warn', '[Replyze] setData: "$key" must be text, a number, true/false or null.');
+        _log('warn',
+            '[Replyze] setData: "$key" must be text, a number, true/false or null.');
       }
     });
     if (clean.isEmpty) return;
@@ -266,7 +281,8 @@ class ReplyzeSession {
   /// Opens a help article by its id.
   void openArticle(int id) {
     if (id <= 0) {
-      _log('warn', '[Replyze] openArticle: the article id must be a positive whole number.');
+      _log('warn',
+          '[Replyze] openArticle: the article id must be a positive whole number.');
       return;
     }
     _broadcast({

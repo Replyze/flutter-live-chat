@@ -2,7 +2,9 @@ name: Release
 
 # Push a tag vX.Y.Z (the version in pubspec.yaml) to check the package,
 # create the GitHub release with the notes from CHANGELOG.md and publish to
-# pub.dev. Publishing is skipped until pub.dev is set up: see RELEASING.md.
+# pub.dev with automated publishing (GitHub's OIDC token, no secret). The
+# README that goes to pub.dev has utm_source=pubdev. Publishing is skipped
+# until pub.dev is set up: see RELEASING.md.
 
 on:
   push:
@@ -53,7 +55,20 @@ jobs:
       - run: dart format --set-exit-if-changed .
       - run: flutter analyze
       - run: flutter test
+      # pub.dev shows the README from the package: its links say utm_source=pubdev.
+      # Only this checkout's copy changes, never the file in the repository.
+      # (assume-unchanged: pub warns about modified checked-in files.)
+      - name: README for pub.dev (utm_source=pubdev)
+        run: |
+          sed -i 's/utm_source=github/utm_source=pubdev/g' README.md
+          git update-index --assume-unchanged README.md
+          if grep -q 'utm_source=github' README.md; then
+            echo "::error::README.md still has utm_source=github."
+            exit 1
+          fi
       - run: dart pub publish --dry-run
+      - name: Links in the README that goes into the package
+        run: grep -o 'utm_source=[a-z]*&utm_medium=[a-z]*&utm_campaign=[a-z-]*' README.md | sort | uniq -c
 
       - name: GitHub release
         env:
@@ -90,12 +105,27 @@ jobs:
     environment: pub.dev
     permissions:
       id-token: write # pub.dev automated publishing (OIDC)
+    # Third-party actions in this job are pinned to a commit, and nothing is
+    # cached: the job holds the OIDC token pub.dev accepts.
     steps:
       - uses: actions/checkout@v7
-      - uses: dart-lang/setup-dart@v1
-      - uses: subosito/flutter-action@v2
+        with:
+          persist-credentials: false
+      - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
-          cache: true
+          cache: false
       - run: flutter pub get
+      # pub.dev shows the README from the package: its links say utm_source=pubdev.
+      # Only this checkout's copy changes, never the file in the repository.
+      # (assume-unchanged: pub warns about modified checked-in files.)
+      - name: README for pub.dev (utm_source=pubdev)
+        run: |
+          sed -i 's/utm_source=github/utm_source=pubdev/g' README.md
+          git update-index --assume-unchanged README.md
+          if grep -q 'utm_source=github' README.md; then
+            echo "::error::README.md still has utm_source=github."
+            exit 1
+          fi
       - run: dart pub publish --force

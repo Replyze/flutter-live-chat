@@ -83,7 +83,20 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
+      # Same as the release workflow. pub.dev shows the README from the package: its links say utm_source=pubdev.
+      # Only this checkout's copy changes, never the file in the repository.
+      # (assume-unchanged: pub warns about modified checked-in files.)
+      - name: README for pub.dev (utm_source=pubdev)
+        run: |
+          sed -i 's/utm_source=github/utm_source=pubdev/g' README.md
+          git update-index --assume-unchanged README.md
+          if grep -q 'utm_source=github' README.md; then
+            echo "::error::README.md still has utm_source=github."
+            exit 1
+          fi
       - run: dart pub publish --dry-run
+      - name: Links in the README that goes into the package
+        run: grep -o 'utm_source=[a-z]*&utm_medium=[a-z]*&utm_campaign=[a-z-]*' README.md | sort | uniq -c
       # The release workflow takes its notes from CHANGELOG.md: the current version needs a section.
       - name: CHANGELOG.md has a section for the version in pubspec.yaml
         run: |

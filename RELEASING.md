@@ -1,20 +1,26 @@
 # Releasing replyze_flutter
 
-A tag `vX.Y.Z` runs [`.github/workflows/release.yml`](.github/workflows/release.yml). It checks that the tag matches `pubspec.yaml` and that `CHANGELOG.md` has a dated section for that version, checks the formatting, runs `flutter analyze`, the tests and `dart pub publish --dry-run`, creates the GitHub release with the CHANGELOG section as notes, and then publishes to pub.dev with pub.dev's automated publishing (GitHub's OIDC token, no secret).
+A tag `vX.Y.Z` runs [`.github/workflows/release.yml`](.github/workflows/release.yml). It checks that the tag matches `pubspec.yaml` and that `CHANGELOG.md` has a dated section for that version, checks the formatting, runs `flutter analyze`, the tests and `dart pub publish --dry-run`, creates the GitHub release with the CHANGELOG section as notes, and then publishes to pub.dev with pub.dev's automated publishing (GitHub's OIDC token, no secret). Only the `publish` job gets `id-token: write`; it runs in the GitHub environment `pub.dev`, with its third-party actions pinned to a commit and no cache.
+
+pub.dev shows the README from the package, so both jobs change `utm_source=github` to `utm_source=pubdev` in their checkout's copy of `README.md` before `dart pub publish` (the file in the repository does not change). CI's `Package` job does the same before its dry run and prints the links.
 
 Until pub.dev is set up, the publish job is skipped (the run shows a notice) and the GitHub release is still created.
 
 ## One-time setup (the owner)
 
 1. **A verified publisher (recommended).** On pub.dev, create the publisher `replyze.chat` (pub.dev → Create publisher; you verify the domain with a DNS TXT record in Google Search Console). Packages under a verified publisher show the domain instead of a person's email.
-2. **The first publish is manual.** pub.dev's automated publishing can only be enabled for a package that already exists. From a clean checkout of the tagged commit, with the Flutter SDK and a Google account that can publish for Replyze:
+2. **The first publish is manual.** pub.dev's automated publishing can only be enabled for a package that already exists, and it needs no token or secret afterwards. Tag the first version as in [Each release](#each-release) (the publish job stays off), then, from a clean checkout of that tag, with the Flutter SDK and the Google account that will own the package (2-step verification on):
    ```sh
+   git clone --branch v0.1.0 https://github.com/Replyze/flutter-live-chat.git && cd flutter-live-chat
    flutter pub get
+   # pub.dev shows this README: give its links utm_source=pubdev, as the workflow does
+   sed -i 's/utm_source=github/utm_source=pubdev/g' README.md
+   git update-index --assume-unchanged README.md
    dart pub publish --dry-run
    dart pub publish
    ```
-   Then, if you made a publisher: pub.dev → `replyze_flutter` → Admin → Transfer to publisher `replyze.chat`.
-3. **Automated publishing.** pub.dev → `replyze_flutter` → Admin → Automated publishing → Enable publishing from GitHub Actions, with repository `Replyze/flutter-live-chat` and tag pattern `v{{version}}`. Also tick "Require GitHub Actions environment" with the environment `pub.dev`, and create that environment in GitHub (Settings → Environments → New environment `pub.dev`; you can add required reviewers there).
+   `dart pub publish` opens a browser to sign in with Google; nothing is saved in the repository. Then, if you made a publisher: pub.dev → `replyze_flutter` → Admin → Transfer to publisher `replyze.chat`.
+3. **Automated publishing.** First create the environment in GitHub: Settings → Environments → New environment → `pub.dev`; under **Deployment branches and tags** choose **Selected branches and tags** and add the tag rule `v*`; optionally add yourself under **Required reviewers**. Then pub.dev → `replyze_flutter` → Admin → Automated publishing → **Enable publishing from GitHub Actions**, with repository `Replyze/flutter-live-chat` and tag pattern `v{{version}}`, and tick **Require GitHub Actions environment** with the environment `pub.dev`. pub.dev then accepts only a run started by pushing a matching tag, from that repository, in that environment.
 4. **Switch the workflow on.** Add the repository variable `PUB_DEV_PUBLISHING` = `true` (Settings → Secrets and variables → Actions → Variables).
 
 The publish job runs when `PUB_DEV_PUBLISHING` is `true`. It uses the `dart-lang/setup-dart` action to get the OIDC token for pub.dev, then Flutter's `dart pub publish --force`. (The reusable workflow `dart-lang/setup-dart/.github/workflows/publish.yml` is not used: it installs only Dart, which can't resolve a Flutter package.) pub.dev never accepts the same version twice, so a failed publish is retried by re-running the job, not by re-tagging.

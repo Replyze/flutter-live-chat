@@ -28,7 +28,7 @@ The live demo is replyze.chat itself: the chat bubble in the bottom-right corner
    ```
 3. **Configure it and put `ReplyzeHost` around your app.** `Replyze.show(context)` opens the chat from any button:
    ```dart
-   import 'package:flutter/material.dart';
+   import 'package:material_ui/material_ui.dart';
    import 'package:replyze_flutter/replyze_flutter.dart';
 
    void main() {
@@ -56,7 +56,7 @@ The live demo is replyze.chat itself: the chat bubble in the bottom-right corner
    }
    ```
 
-Tap the button and the chat opens full screen. If your widget has an allowed-domains list, add `baseUrl` (see [Allowed domains](#allowed-domains)). The same app is [`example/lib/quickstart.dart`](example/lib/quickstart.dart).
+Tap the button and the chat opens full screen. If your widget has an allowed-domains list, add `baseUrl` (see [Allowed domains](#allowed-domains)). The same app is [`example/lib/quickstart.dart`](example/lib/quickstart.dart). On Flutter older than 3.47, import `package:flutter/material.dart` instead of `material_ui`, as your app already does.
 
 ## Contents
 
@@ -68,7 +68,7 @@ Tap the button and the chat opens full screen. If your widget has an allowed-dom
 
 Requirements:
 
-- Flutter 3.19 or newer (Dart 3.3).
+- Flutter 3.19 or newer (Dart 3.3). The package uses only Flutter's widgets library, so it works in Material, Cupertino and other apps, before and after Flutter 3.47 moved Material into the `material_ui` package.
 - The current `webview_flutter` needs Android `minSdkVersion` 24 and iOS 13. New Flutter projects already target these; in an older project set `minSdk = 24` in `android/app/build.gradle(.kts)` and `platform :ios, '13.0'` in `ios/Podfile`.
 - For camera and photo attachments on iOS, add `NSCameraUsageDescription` and `NSPhotoLibraryUsageDescription` to `ios/Runner/Info.plist`.
 - A Replyze account ([sign up](https://client.replyze.chat/register?utm_source=github&utm_medium=flutter-live-chat&utm_content=install)).
@@ -188,7 +188,7 @@ flutter test           # the bridge (protocol, session) and the widgets on a fak
 dart pub publish --dry-run
 ```
 
-CI runs these on Flutter stable and on Flutter 3.19 (the oldest the package allows), runs [pana](https://pub.dev/packages/pana) (the pub.dev score), and builds the example app for Android and iOS. Releases: [RELEASING.md](RELEASING.md).
+CI runs these on Flutter stable and on Flutter 3.19 (the oldest the package allows), runs [pana](https://pub.dev/packages/pana) (the pub.dev score), and analyzes, tests and builds the example app for Android and iOS (the example needs Flutter 3.47 or newer). Releases: [RELEASING.md](RELEASING.md).
 
 ## Links
 

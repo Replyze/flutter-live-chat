@@ -53,7 +53,8 @@ jobs:
 
   oldest:
     # The oldest Flutter the pubspec allows (flutter: ">=3.19.0"), with the
-    # newest dependency versions that still support it.
+    # newest dependency versions that still support it. Without the example,
+    # which needs Flutter 3.47 (material_ui).
     name: Analyze and test (Flutter 3.19)
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -64,7 +65,7 @@ jobs:
           flutter-version: 3.19.6
           channel: stable
           cache: true
-      - run: flutter pub get
+      - run: flutter pub get --no-example
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
 
@@ -97,7 +98,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
@@ -108,6 +109,8 @@ jobs:
       - name: Create the platform folders
         working-directory: example
         run: flutter create --platforms=android,ios --project-name replyze_flutter_example .
+      - run: flutter analyze
+        working-directory: example
       - run: flutter test
         working-directory: example
       - run: flutter build apk --debug

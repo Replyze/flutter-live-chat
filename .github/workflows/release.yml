@@ -1,0 +1,100 @@
+name: Release
+
+# Push a tag vX.Y.Z (the version in pubspec.yaml) to check the package,
+# create the GitHub release with the notes from CHANGELOG.md and publish to
+# pub.dev. Publishing is skipped until pub.dev is set up: see RELEASING.md.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Check and create the GitHub release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write # the GitHub release
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Check the tag against pubspec.yaml
+        id: version
+        run: |
+          version="$(sed -n 's/^version: *//p' pubspec.yaml)"
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::The tag $GITHUB_REF_NAME does not match the version in pubspec.yaml ($version)."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          case "$version" in
+            *-*) echo "prerelease=true" >> "$GITHUB_OUTPUT" ;;
+            *) echo "prerelease=false" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - name: Release notes from CHANGELOG.md
+        run: dart tool/changelog_notes.dart "${{ steps.version.outputs.version }}" --release > "$RUNNER_TEMP/notes.md"
+
+      - run: flutter pub get
+      - run: dart format --set-exit-if-changed .
+      - run: flutter analyze
+      - run: flutter test
+      - run: dart pub publish --dry-run
+
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRERELEASE: ${{ steps.version.outputs.prerelease }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "::notice::The release $GITHUB_REF_NAME already exists."
+            exit 0
+          fi
+          flags=()
+          if [ "$PRERELEASE" = "true" ]; then flags+=(--prerelease); fi
+          gh release create "$GITHUB_REF_NAME" \
+            --verify-tag \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file "$RUNNER_TEMP/notes.md" \
+            "${flags[@]}"
+
+      - name: pub.dev publishing is not set up
+        if: vars.PUB_DEV_PUBLISHING != 'true'
+        run: echo "::notice::Not published to pub.dev. Enable automated publishing on pub.dev and set the PUB_DEV_PUBLISHING variable (see RELEASING.md)."
+
+  publish:
+    # pub.dev's automated publishing: GitHub's OIDC token, no secret. The
+    # reusable dart-lang/setup-dart publish workflow only installs Dart, which
+    # can't resolve a Flutter package, so this job uses the setup-dart action
+    # for the token (as pub.dev's docs show for Flutter packages) and Flutter's
+    # own dart to publish.
+    name: Publish to pub.dev
+    needs: release
+    if: vars.PUB_DEV_PUBLISHING == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: pub.dev
+    permissions:
+      id-token: write # pub.dev automated publishing (OIDC)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart pub publish --force

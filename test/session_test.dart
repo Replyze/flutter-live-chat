@@ -119,6 +119,58 @@ void main() {
     ]);
   });
 
+  test('a sign-out with no chat loaded reaches the next chat first, once', () {
+    session.identify(const ReplyzeUser(email: 'old@shop.example'));
+    session.reset();
+    expect(session.isResetPending, isTrue);
+
+    // Later someone opens the chat without signing in.
+    final web = FakeWebView();
+    final connection = session.connect(web.inject);
+    connection.setVisible(true);
+    connection.receive(event('ready'));
+    expect(web.names, ['reset', 'open']);
+    expect(session.isResetPending, isFalse);
+
+    // Carried out once: a reload or another chat view doesn't reset again.
+    connection.reloaded();
+    connection.receive(event('ready'));
+    final other = FakeWebView();
+    session.connect(other.inject).receive(event('ready'));
+    expect(web.names.where((name) => name == 'reset'), hasLength(1));
+    expect(other.names, isNot(contains('reset')));
+  });
+
+  test('a sign-out survives a page that is replaced before it is ready', () {
+    final first = FakeWebView();
+    final loading = session.connect(first.inject);
+    session.reset();
+    // "Try again" or a reload: the old connection goes, a new one comes.
+    loading.reloaded();
+    loading.disconnect();
+    final second = FakeWebView();
+    session.connect(second.inject).receive(event('ready'));
+    expect(second.names.first, 'reset');
+    expect(first.commands, isEmpty);
+  });
+
+  test('a sign-out stays pending while the WebView throws', () {
+    var broken = true;
+    final scripts = <String>[];
+    final flaky = session.connect((script) {
+      if (broken) throw StateError('crashed');
+      scripts.add(script);
+    });
+    flaky.receive(event('ready'));
+    session.reset();
+    expect(session.isResetPending, isTrue);
+    broken = false;
+    flaky.reloaded();
+    flaky.receive(event('ready'));
+    expect(scripts.first, contains('"cmd":"reset"'));
+    expect(session.isResetPending, isFalse);
+  });
+
   test('keeps the unread count and reports only changes', () async {
     final counts = <int>[];
     final subscription = session.unreadCountChanges.listen(counts.add);

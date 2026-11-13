@@ -137,6 +137,8 @@ Replyze.identify(ReplyzeUser(
 Replyze.reset();
 ```
 
+`reset()` works with no chat on screen too. The chat page keeps the user's conversation in the WebView's storage, so when no chat widget is in the tree (or its page is still loading, reloading, or being loaded again with "Try again"), the next chat page that loads forgets the user before it does anything else. The next person who opens the chat sees nothing of the previous user. That pending sign-out lives in the app's memory: if your app can be closed after a sign-out and before any chat loads again, call `Replyze.reset()` again at the next start (for example, when your own storage says someone signed out since the chat last ran).
+
 A verified user is the same contact on every device and on your website, with their past conversations. `Replyze.identified` emits `true` when the hash matched. A hash that doesn't match changes nothing; in debug builds the log says `[Replyze] Failed to identify user`.
 
 ## API
@@ -151,7 +153,7 @@ A verified user is the same contact on every device and on your website, with th
 | `Replyze.setLanguage('de')` | The chat's language, over the device's. |
 | `Replyze.openArticle(12, context)` | Opens the chat on a help article (needs the widget's Home or Help tab). |
 | `Replyze.sendMessage('...')` | Sends a message as the user. |
-| `Replyze.reset()` | Sign-out. |
+| `Replyze.reset()` | Sign-out. With no chat loaded, the next chat that loads does it first. |
 | `Replyze.unreadCount` | `ValueListenable<int>`: unread replies while the chat is closed. |
 | `Replyze.messages` | `Stream<ReplyzeMessage>`: every reply from the AI or the team. |
 | `Replyze.errors` | `Stream<ReplyzeError>`: `load_timeout`, `help_unavailable`, `invalid_options`. |

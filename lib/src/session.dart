@@ -100,7 +100,7 @@ class ReplyzeConnection {
     if (_gone) return;
     final cmd = command['cmd'];
     if (_ready) {
-      _run(command);
+      if (_run(command) && cmd == 'reset') _session._resetPending = false;
     } else if (cmd == 'reset') {
       // Goes first when the widget is ready, before the new user's state.
       _pendingReset = true;
@@ -114,10 +114,12 @@ class ReplyzeConnection {
   void _becomeReady() {
     _timer?.cancel();
     _ready = true;
-    // The page started over: a sign-out asked for meanwhile, the insets,
-    // who the user is, whether the chat is on screen, then the rest.
-    if (_pendingReset) _run({'cmd': 'reset'});
+    // The page started over: a sign-out asked for meanwhile (or one no chat
+    // page has carried out yet), the insets, who the user is, whether the
+    // chat is on screen, then the rest.
+    final reset = _pendingReset || _session._resetPending;
     _pendingReset = false;
+    if (reset && _run({'cmd': 'reset'})) _session._resetPending = false;
     if (_insets != null) _run(_insets!);
     for (final command in _session._stickyCommands()) {
       _run(command);
@@ -132,11 +134,14 @@ class ReplyzeConnection {
     _session._readyController.add(null);
   }
 
-  void _run(Map<String, Object?> command) {
+  /// False when the WebView threw: it is going away, and the next ready
+  /// replays what matters.
+  bool _run(Map<String, Object?> command) {
     try {
       _inject(commandScript(command));
+      return true;
     } catch (_) {
-      // The WebView is going away; the next ready replays what matters.
+      return false;
     }
   }
 
@@ -170,6 +175,13 @@ class ReplyzeSession {
   final void Function(String level, String message) _log;
 
   final Set<ReplyzeConnection> _connections = {};
+
+  /// reset() was called and no chat page has carried it out yet: no chat was
+  /// loaded, or its page was loading, reloading or loaded again with "Try
+  /// again". The next page that becomes ready resets first, so the next
+  /// person never sees the previous user's chat, which the WebView keeps in
+  /// its storage.
+  bool _resetPending = false;
   Map<String, Object?>? _identity;
   Map<String, Object?>? _language;
   Map<String, Object?> _data = {};
@@ -204,6 +216,9 @@ class ReplyzeSession {
 
   /// Unread replies while the chat is closed.
   int get unreadCount => _unread;
+
+  /// Whether a reset() still waits for a chat page to carry it out.
+  bool get isResetPending => _resetPending;
 
   /// Changes of [unreadCount].
   Stream<int> get unreadCountChanges => _unreadController.stream;
@@ -300,8 +315,10 @@ class ReplyzeSession {
     });
   }
 
-  /// The user signed out: forget them in the chat too.
+  /// The user signed out: forget them in the chat too. With no chat loaded,
+  /// the next chat that loads does it before anything else.
   void reset() {
+    _resetPending = true;
     _identity = null;
     _data = {};
     for (final connection in _connections) {

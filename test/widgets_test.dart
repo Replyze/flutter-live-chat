@@ -240,6 +240,27 @@ void main() {
     expect(find.text("The chat couldn't load."), findsNothing);
   });
 
+  testWidgets('a sign-out before the chat loaded reaches Try again',
+      (tester) async {
+    Replyze.identify(const ReplyzeUser(email: 'ana@shop.example'));
+    Replyze.reset();
+    await tester.pumpWidget(app(
+      home: ReplyzeChat(
+        options: const ReplyzeOptions(widgetToken: 'wgt_test'),
+      ),
+    ));
+    await tester.pump(const Duration(seconds: 21));
+    await tester.tap(find.text('Try again'));
+    await tester.pump();
+    expect(platform.controllers, hasLength(2));
+    platform.controllers.last.post('ready', {'version': 1});
+    await tester.pump();
+    expect(platform.controllers.first.commandNames, isEmpty);
+    expect(platform.controllers.last.commandNames.first, 'reset');
+    expect(platform.controllers.last.commandNames, isNot(contains('identify')));
+    expect(Replyze.session.isResetPending, isFalse);
+  });
+
   testWidgets(
       'ReplyzeHost preloads the chat hidden; show() opens it and back closes it',
       (tester) async {

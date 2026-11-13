@@ -1,6 +1,6 @@
 name: replyze_flutter
 description: Live chat and AI support in Flutter apps on iOS and Android. The Replyze chat with signed-in users, unread counts, help articles and events.
-version: 0.1.0
+version: 0.1.1
 homepage: https://github.com/Replyze/flutter-live-chat
 repository: https://github.com/Replyze/flutter-live-chat
 issue_tracker: https://github.com/Replyze/flutter-live-chat/issues

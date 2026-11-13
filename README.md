@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://replyze.chat/?utm_source=github&utm_medium=flutter-live-chat">
+  <a href="https://replyze.chat/?utm_source=github&utm_medium=referral&utm_campaign=flutter-live-chat">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Replyze/.github/main/assets/logo-on-dark.png">
       <img src="https://raw.githubusercontent.com/Replyze/.github/main/assets/logo-on-light.png" alt="Replyze" height="48">
@@ -9,15 +9,15 @@
 
 # Live chat and AI support for Flutter apps
 
-`replyze_flutter` puts the [Replyze](https://replyze.chat/?utm_source=github&utm_medium=flutter-live-chat) live chat and AI assistant inside your Flutter app, on iOS and Android. It is the same chat as the Replyze widget on your website, running in a WebView (`webview_flutter`): AI answers, your team's replies, help articles, the visitor's language, file attachments and identity verification all work, and new widget features reach your app without an app update.
+`replyze_flutter` puts the [Replyze](https://replyze.chat/?utm_source=github&utm_medium=referral&utm_campaign=flutter-live-chat) live chat and AI assistant inside your Flutter app, on iOS and Android. It is the same chat as the Replyze widget on your website, running in a WebView (`webview_flutter`): AI answers, your team's replies, help articles, the visitor's language, file attachments and identity verification all work, and new widget features reach your app without an app update.
 
-**[Create a free account](https://client.replyze.chat/register?utm_source=github&utm_medium=flutter-live-chat&utm_content=cta-top)** · [Live demo](https://replyze.chat/?utm_source=github&utm_medium=flutter-live-chat&utm_content=live-demo) · [Docs](https://github.com/Replyze/replyze)
+**[Create a free account](https://client.replyze.chat/register?utm_source=github&utm_medium=referral&utm_campaign=flutter-live-chat&utm_content=cta-top)** · [Live demo](https://replyze.chat/?utm_source=github&utm_medium=referral&utm_campaign=flutter-live-chat&utm_content=live-demo) · [Docs](https://github.com/Replyze/replyze)
 
 The live demo is replyze.chat itself: the chat bubble in the bottom-right corner is the widget this package runs in your app.
 
 ## Quickstart
 
-1. **Get your widget token.** [Create a free account](https://client.replyze.chat/register?utm_source=github&utm_medium=flutter-live-chat&utm_content=quickstart), then copy the token (`wgt_...`) from **Settings → Integrations → Install widget**.
+1. **Get your widget token.** [Create a free account](https://client.replyze.chat/register?utm_source=github&utm_medium=referral&utm_campaign=flutter-live-chat&utm_content=quickstart), then copy the token (`wgt_...`) from **Settings → Integrations → Install widget**.
 2. **Add the package** from GitHub to `pubspec.yaml`, then run `flutter pub get`:
    ```yaml
    dependencies:
@@ -73,7 +73,7 @@ Requirements:
 - Flutter 3.19 or newer (Dart 3.3). The package uses only Flutter's widgets library, so it works in Material, Cupertino and other apps, before and after Flutter 3.47 moved Material into the `material_ui` package.
 - The current `webview_flutter` needs Android `minSdkVersion` 24 and iOS 13. New Flutter projects already target these; in an older project set `minSdk = 24` in `android/app/build.gradle(.kts)` and `platform :ios, '13.0'` in `ios/Podfile`.
 - For camera and photo attachments on iOS, add `NSCameraUsageDescription` and `NSPhotoLibraryUsageDescription` to `ios/Runner/Info.plist`.
-- A Replyze account ([sign up](https://client.replyze.chat/register?utm_source=github&utm_medium=flutter-live-chat&utm_content=install)).
+- A Replyze account ([sign up](https://client.replyze.chat/register?utm_source=github&utm_medium=referral&utm_campaign=flutter-live-chat&utm_content=install)).
 
 ## Open the chat
 
@@ -194,8 +194,8 @@ CI runs these on Flutter stable and on Flutter 3.19 (the oldest the package allo
 
 ## Links
 
-- [Replyze](https://replyze.chat/?utm_source=github&utm_medium=flutter-live-chat&utm_content=footer): AI customer support and live chat
-- [Pricing](https://replyze.chat/pricing?utm_source=github&utm_medium=flutter-live-chat&utm_content=footer)
+- [Replyze](https://replyze.chat/?utm_source=github&utm_medium=referral&utm_campaign=flutter-live-chat&utm_content=footer): AI customer support and live chat
+- [Pricing](https://replyze.chat/pricing?utm_source=github&utm_medium=referral&utm_campaign=flutter-live-chat&utm_content=footer)
 - [React Native version](https://github.com/Replyze/react-native-live-chat)
 - [Changelog](CHANGELOG.md)
 

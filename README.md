@@ -33,10 +33,12 @@ The live demo is replyze.chat itself: the chat bubble in the bottom-right corner
 
    void main() {
      Replyze.configure(const ReplyzeOptions(widgetToken: 'wgt_YOUR_TOKEN'));
-     runApp(MaterialApp(
-       builder: (context, child) => ReplyzeHost(child: child!),
-       home: const HomePage(),
-     ));
+     runApp(
+       MaterialApp(
+         builder: (context, child) => ReplyzeHost(child: child!),
+         home: const HomePage(),
+       ),
+     );
    }
 
    class HomePage extends StatelessWidget {

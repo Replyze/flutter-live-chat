@@ -5,10 +5,12 @@ void main() {
   // Your widget's token (Settings → Integrations → Install widget)
   // and, when the widget has an allowed-domains list, a URL on one of those
   // domains.
-  Replyze.configure(const ReplyzeOptions(
-    widgetToken: 'wgt_your_widget_token',
-    baseUrl: 'https://yourshop.example/app',
-  ));
+  Replyze.configure(
+    const ReplyzeOptions(
+      widgetToken: 'wgt_your_widget_token',
+      baseUrl: 'https://yourshop.example/app',
+    ),
+  );
   runApp(const ExampleApp());
 }
 
@@ -39,13 +41,24 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    Replyze.messages.listen((message) => debugPrint('Reply from ${message.senderName ?? message.sender}: ${message.text}'));
+    Replyze.messages.listen(
+      (message) => debugPrint(
+        'Reply from ${message.senderName ?? message.sender}: ${message.text}',
+      ),
+    );
   }
 
   void _signIn() {
     // userHash comes from YOUR server: HMAC-SHA256 of the user id, keyed with
     // the identity secret. Never put the identity secret in the app.
-    Replyze.identify(const ReplyzeUser(userId: 'user_1234', email: 'ana@example.com', name: 'Ana', userHash: null));
+    Replyze.identify(
+      const ReplyzeUser(
+        userId: 'user_1234',
+        email: 'ana@example.com',
+        name: 'Ana',
+        userHash: null,
+      ),
+    );
     Replyze.setData({'plan': 'pro', 'app_version': '3.2.0'});
     Replyze.pushEvent('Signed in');
     setState(() => _signedIn = true);
@@ -78,7 +91,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 12),
             OutlinedButton(
-              onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const SupportScreen())),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const SupportScreen()),
+              ),
               child: const Text('Chat as a screen'),
             ),
             const SizedBox(height: 12),

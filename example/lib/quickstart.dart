@@ -5,10 +5,12 @@ import 'package:replyze_flutter/replyze_flutter.dart';
 
 void main() {
   Replyze.configure(const ReplyzeOptions(widgetToken: 'wgt_YOUR_TOKEN'));
-  runApp(MaterialApp(
-    builder: (context, child) => ReplyzeHost(child: child!),
-    home: const HomePage(),
-  ));
+  runApp(
+    MaterialApp(
+      builder: (context, child) => ReplyzeHost(child: child!),
+      home: const HomePage(),
+    ),
+  );
 }
 
 class HomePage extends StatelessWidget {

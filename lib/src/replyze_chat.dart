@@ -316,8 +316,8 @@ class _DefaultError extends StatelessWidget {
                   onTap: onRetry,
                   behavior: HitTestBehavior.opaque,
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
                     decoration: const BoxDecoration(
                       color: Color(0xFFEEF0F3),
                       borderRadius: BorderRadius.all(Radius.circular(8)),

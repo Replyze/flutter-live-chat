@@ -472,7 +472,9 @@ bool isChatPage(String url, String baseUrl) {
   if (url.isEmpty ||
       url == 'about:blank' ||
       url.startsWith('about:srcdoc') ||
-      url.startsWith('data:')) return true;
+      url.startsWith('data:')) {
+    return true;
+  }
   String strip(String u) => u.split('#').first.replaceAll(RegExp(r'/+$'), '');
   return strip(url) == strip(baseUrl);
 }

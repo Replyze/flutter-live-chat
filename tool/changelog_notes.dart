@@ -13,8 +13,8 @@ void main(List<String> args) {
       .firstWhere((a) => !a.startsWith('--'), orElse: () => '')
       .replaceFirst(RegExp('^v'), '');
   if (version.isEmpty) {
-    stderr.writeln(
-        'Usage: dart tool/changelog_notes.dart <version> [--release]');
+    stderr
+        .writeln('Usage: dart tool/changelog_notes.dart <version> [--release]');
     exit(1);
   }
 

@@ -82,7 +82,9 @@ jobs:
       - run: dart pub publish --dry-run
       # The release workflow takes its notes from CHANGELOG.md: the current version needs a section.
       - name: CHANGELOG.md has a section for the version in pubspec.yaml
-        run: dart tool/changelog_notes.dart "$(sed -n 's/^version: *//p' pubspec.yaml)"
+        run: |
+          version="$(sed -n 's/^version: *//p' pubspec.yaml)"
+          dart tool/changelog_notes.dart "$version"
       - name: pana (the pub.dev score)
         run: |
           dart pub global activate pana

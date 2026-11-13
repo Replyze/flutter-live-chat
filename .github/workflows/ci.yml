@@ -95,6 +95,32 @@ jobs:
           export PATH="$PATH:$HOME/.pub-cache/bin"
           pana --no-warning --exit-code-threshold 0 .
 
+  git-install:
+    # What the README tells developers to do, against this commit: a new
+    # Flutter app, the package as a git dependency, the README Quickstart as
+    # lib/main.dart, flutter analyze.
+    name: Install from GitHub (a new app)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      REPO: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+      SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: A new app with the git dependency
+        run: |
+          cd "$RUNNER_TEMP"
+          flutter create --empty --platforms=android,ios quickstart_app
+          cd quickstart_app
+          flutter pub add "replyze_flutter:{\"git\":{\"url\":\"https://github.com/$REPO.git\",\"ref\":\"$SHA\"}}"
+          cp "$GITHUB_WORKSPACE/example/lib/quickstart.dart" lib/main.dart
+          rm -rf test
+          flutter analyze
+
   example-android:
     name: Example app (Android)
     runs-on: ubuntu-latest

@@ -12,5 +12,6 @@ The first version.
 - `ReplyzeChat`: the chat as one of your own screens, with `visible`, `insets`, `errorBuilder` and `reload()`.
 - The `Replyze` API: `configure`, `show`, `hide`, `isVisible`, `identify` (with identity verification), `setData`, `pushEvent`, `setLanguage`, `openArticle`, `sendMessage`, `reset`, `unreadCount`, `messages`, `errors` and `identified`.
 - The chat runs the Replyze widget (`https://cdn.replyze.chat/widget.js`) in its in-app mode inside `webview_flutter`, on a page with a content security policy that allows scripts from the widget's CDN only. Links open outside the app; attachments on Android use `file_selector`. Calls made before the chat loads wait for it; who the user is, their data and the language are sent again when the WebView reloads.
+- Flutter 3.19 and newer. The package uses only Flutter's widgets library (no Material), so it fits any app, before and after Flutter 3.47 moved Material into `material_ui`. Tested on Flutter 3.19 and on the current stable release; the example app builds for Android and iOS.
 
 [0.1.0]: https://github.com/Replyze/flutter-live-chat/releases/tag/v0.1.0

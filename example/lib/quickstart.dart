@@ -1,6 +1,6 @@
 // The Quickstart from the README, as a whole app:
 // flutter run -t lib/quickstart.dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:replyze_flutter/replyze_flutter.dart';
 
 void main() {

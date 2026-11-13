@@ -43,8 +43,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _signIn() {
-    // userHash comes from YOUR server: HMAC-SHA256(userId, identity secret).
-    // Never put the identity secret in the app.
+    // userHash comes from YOUR server: HMAC-SHA256 of the user id, keyed with
+    // the identity secret. Never put the identity secret in the app.
     Replyze.identify(const ReplyzeUser(userId: 'user_1234', email: 'ana@example.com', name: 'Ana', userHash: null));
     Replyze.setData({'plan': 'pro', 'app_version': '3.2.0'});
     Replyze.pushEvent('Signed in');
